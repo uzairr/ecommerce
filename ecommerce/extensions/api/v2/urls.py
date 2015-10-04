@@ -2,12 +2,19 @@ from django.conf.urls import url, include
 from rest_framework_extensions.routers import ExtendedSimpleRouter
 
 from ecommerce.core.constants import COURSE_ID_PATTERN
-from ecommerce.extensions.api.v2.views import (baskets as basket_views, payments as payment_views,
-                                               orders as order_views, refunds as refund_views,
-                                               products as product_views, courses as course_views,
-                                               publication as publication_views, partners as partner_views,
-                                               catalog as catalog_views,
-                                               stockrecords as stockrecords_views)
+from ecommerce.extensions.api.v2.views import (
+    baskets as basket_views,
+    catalog as catalog_views,
+    checkout as checkout_views,
+    courses as course_views,
+    orders as order_views, 
+    partners as partner_views,
+    payments as payment_views,
+    products as product_views, 
+    publication as publication_views,
+    refunds as refund_views, 
+    stockrecords as stockrecords_views
+)
 
 ORDER_NUMBER_PATTERN = r'(?P<number>[-\w]+)'
 BASKET_ID_PATTERN = r'(?P<basket_id>[\w]+)'
@@ -56,6 +63,7 @@ ATOMIC_PUBLICATION_URLS = [
 
 urlpatterns = [
     url(r'^baskets/', include(BASKET_URLS, namespace='baskets')),
+    url(r'^checkout/$', checkout_views.CheckoutView.as_view(), name='checkout'),
     url(r'^orders/', include(ORDER_URLS, namespace='orders')),
     url(r'^payment/', include(PAYMENT_URLS, namespace='payment')),
     url(r'^refunds/', include(REFUND_URLS, namespace='refunds')),

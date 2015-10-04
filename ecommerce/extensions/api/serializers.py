@@ -13,7 +13,6 @@ import waffle
 from ecommerce.core.constants import ISO_8601_FORMAT, COURSE_ID_REGEX
 from ecommerce.courses.models import Course
 
-
 logger = logging.getLogger(__name__)
 
 BillingAddress = get_model('order', 'BillingAddress')
@@ -332,3 +331,12 @@ class CatalogSerializer(serializers.ModelSerializer):
             kwargs={'parent_lookup_stockrecords__catalogs': obj.id},
             request=self.context['request']
         )
+
+
+class CheckoutSerializer(serializers.Serializer):
+    payment_form_data = serializers.SerializerMethodField()
+    payment_page_url = serializers.URLField()
+    payment_processor = serializers.CharField()
+
+    def get_payment_form_data(self, obj):
+        return obj['payment_form_data']
