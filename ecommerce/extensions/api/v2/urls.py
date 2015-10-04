@@ -8,7 +8,7 @@ from ecommerce.extensions.api.v2.views import (baskets as basket_views, payments
                                                publication as publication_views, partners as partner_views,
                                                catalog as catalog_views,
                                                stockrecords as stockrecords_views,
-                                               coupons as coupon_views)
+                                               coupons as coupon_views, checkout as checkout_views,)
 from ecommerce.extensions.voucher.views import CouponReportCSVView
 
 ORDER_NUMBER_PATTERN = r'(?P<number>[-\w]+)'
@@ -48,6 +48,7 @@ ATOMIC_PUBLICATION_URLS = [
 
 urlpatterns = [
     url(r'^baskets/', include(BASKET_URLS, namespace='baskets')),
+    url(r'^checkout/$', checkout_views.CheckoutView.as_view(), name='checkout'),
     url(r'^coupons/', include(COUPON_URLS, namespace='vouchers')),
     url(r'^payment/', include(PAYMENT_URLS, namespace='payment')),
     url(r'^refunds/', include(REFUND_URLS, namespace='refunds')),
