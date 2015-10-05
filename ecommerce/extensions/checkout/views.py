@@ -4,8 +4,10 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.generic import TemplateView
 # noinspection PyUnresolvedReferences
 from oscar.apps.checkout.views import *  # pylint: disable=wildcard-import, unused-wildcard-import
+import waffle
 
 from ecommerce.extensions.payment.helpers import get_processor_class
+from ecommerce.extensions.payment.processors.braintree import Braintree
 
 
 class PaymentView(TemplateView):
@@ -23,12 +25,16 @@ class PaymentView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super(PaymentView, self).get_context_data(**kwargs)
+        user = self.request.user
         basket = Basket.get_basket(self.request.user, self.request.site)
+        context['basket'] = basket
 
-        context.update({
-            'basket': basket,
-            'payment_processors': self.get_payment_processors()
-        })
+        if waffle.flag_is_active(self.request, 'pay-with-braintree'):
+            braintree = Braintree()
+            context['braintree_client_token'] = braintree.generate_client_token(user)
+            context['braintree_merchant_id'] = braintree.merchant_id
+        else:
+            context['payment_processors'] = self.get_payment_processors()
         return context
 
     def get_payment_processors(self):

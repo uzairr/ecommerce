@@ -7,7 +7,6 @@
 {% block title %}{% trans "Checkout" %}{% endblock title %}
 
 {% block javascript %}
-    <script src="{% static 'js/pages/checkout_payment.js' %}"></script>
 {% endblock %}
 
 
@@ -44,17 +43,41 @@
             </tr>
             </tfoot>
         </table>
-        <div class="payment-buttons" data-basket-id="{{ basket.id }}">
-            {% for processor in payment_processors %}
-                <button class="btn payment-button" value="{{ processor.NAME|lower }}">
-                    {% if processor.NAME == 'cybersource' %}
-                        {% trans "Checkout" %}
-                    {% elif processor.NAME == 'paypal' %}
-                        {# Translators: Do NOT translate the name PayPal. #}
-                        {% trans "Checkout with PayPal" %}
-                    {% endif %}
-                </button>
-            {% endfor %}
-        </div>
+        {% if braintree_client_token and braintree_merchant_id %}
+            <h1>{% trans "Payment Details" %}</h1>
+            <form id="checkout" method="post" action="/payment/braintree/checkout/">
+                {% csrf_token %}
+                <input type="hidden" name="basket_id" value="{{ basket.id }}">
+
+                <div id="payment-form"></div>
+                <div class="payment-buttons">
+                    <input class="btn payment-button" type="submit" value="Pay ${{ basket.total_incl_tax|intcomma }}">
+                </div>
+            </form>
+
+            <script src="https://js.braintreegateway.com/v2/braintree.js"></script>
+            <script>
+                braintree.setup('{{ braintree_client_token }}', 'dropin', {container: 'payment-form'});
+                window.onBraintreeDataLoad = function () {
+                    BraintreeData.setup('{{ braintree_merchant_id }}', 'checkout', BraintreeData.environments.production);
+                };
+            </script>
+            <script src="https://js.braintreegateway.com/v1/braintree-data.js" async=true></script>
+        {% else %}
+            <div class="payment-buttons" data-basket-id="{{ basket.id }}">
+                {% for processor in payment_processors %}
+                    <button class="btn payment-button" value="{{ processor.NAME|lower }}">
+                        {% if processor.NAME == 'cybersource' %}
+                            {% trans "Checkout" %}
+                        {% elif processor.NAME == 'paypal' %}
+                            {# Translators: Do NOT translate the name PayPal. #}
+                            {% trans "Checkout with PayPal" %}
+                        {% endif %}
+                    </button>
+                {% endfor %}
+            </div>
+{#            TODO: Do this properly#}
+            <script src="{% static 'js/pages/checkout_payment.js' %}"></script>
+        {% endif %}
     </div>
 {% endblock content %}
