@@ -46,15 +46,15 @@
         </table>
         <div class="payment-buttons" data-basket-id="{{ basket.id }}">
             {% for processor in payment_processors %}
-                <button class="btn payment-button" value="{{ processor.NAME|lower }}">
-                    {% if processor.NAME == 'cybersource' %}
+                {% if processor.NAME == 'cybersource' %}
+                    <button class="btn payment-button" value="{{ processor.NAME|lower }}">
                         {% trans "Checkout" %}
-                    {% elif processor.NAME == 'paypal' %}
-                        {# Translators: Do NOT translate the name PayPal. #}
-                        {% trans "Checkout with PayPal" %}
-                    {% endif %}
-                </button>
+                    </button>
+                {% endif %}
             {% endfor %}
+            <a class="btn payment-button" href="{% url 'paypal-redirect' %}">
+                {% trans "Checkout with PayPal" %}
+            </a>
         </div>
     </div>
 {% endblock content %}

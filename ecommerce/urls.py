@@ -1,5 +1,4 @@
 import os
-
 from django.conf import settings
 from django.conf.urls import url, include
 from django.conf.urls.static import static
@@ -8,6 +7,7 @@ from django.contrib.auth.views import logout
 from django.core.urlresolvers import reverse_lazy
 from django.shortcuts import redirect
 from django.views.generic import RedirectView, TemplateView
+from paypal.express.dashboard.app import application
 
 from ecommerce.core import views as core_views
 from ecommerce.extensions.urls import urlpatterns as extensions_patterns
@@ -56,6 +56,8 @@ urlpatterns = [
     url(r'^health/$', core_views.health, name='health'),
     url(r'^i18n/', include('django.conf.urls.i18n')),
     url(r'^jsi18n/$', 'django.views.i18n.javascript_catalog', js_info_dict),
+    url(r'^checkout/paypal/', include('paypal.express.urls')),
+    url(r'^dashboard/paypal/express/', include(application.urls)),
     url('', include('social.apps.django_app.urls', namespace='social')),
 ]
 

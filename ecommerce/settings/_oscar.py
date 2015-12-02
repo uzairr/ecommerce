@@ -22,6 +22,7 @@ OSCAR_APPS = [
     'ecommerce.extensions.api',
     'ecommerce.extensions.fulfillment',
     'ecommerce.extensions.refund',
+    'paypal',
 ] + get_core_apps([
     'ecommerce.extensions.analytics',
     'ecommerce.extensions.basket',
@@ -120,6 +121,11 @@ PAYMENT_PROCESSOR_CONFIG = {
 }
 
 PAYMENT_PROCESSOR_SWITCH_PREFIX = 'payment_processor_active_'
+
+PAYPAL_SANDBOX_MODE = True
+PAYPAL_API_USERNAME = None
+PAYPAL_API_PASSWORD = None
+PAYPAL_API_SIGNATURE = None
 # END PAYMENT PROCESSING
 
 
@@ -240,6 +246,16 @@ OSCAR_DASHBOARD_NAVIGATION = [
         'label': _('Reports'),
         'icon': 'icon-bar-chart',
         'url_name': 'dashboard:reports-index',
+    },
+    {
+        'label': _('PayPal'),
+        'icon': 'icon-globe',
+        'children': [
+            {
+                'label': _('Express transactions'),
+                'url_name': 'paypal-express-list',
+            },
+        ]
     },
 ]
 # END DASHBOARD NAVIGATION MENU

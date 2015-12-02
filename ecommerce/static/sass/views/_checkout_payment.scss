@@ -10,7 +10,7 @@
   .payment-buttons {
     @extend .text-right;
 
-    button {
+    .btn {
       @extend .btn-success;
     }
   }
