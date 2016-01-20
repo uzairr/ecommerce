@@ -1,0 +1,45 @@
+{% extends "checkout/checkout.html" %}
+{% load i18n %}
+
+{% block title %}
+  {% trans "Payment details" %} | {{ block.super }}
+{% endblock %}
+
+{% block checkout_nav %}
+  {% include 'checkout/nav.html' with step=3 %}
+{% endblock %}
+
+{% block checkout_title %}{% trans "Enter payment details" %}{% endblock %}
+
+{% block order_contents %}{% endblock %}
+{% block shipping_address %}{% endblock %}
+{% block shipping_method %}{% endblock %}
+{% block payment_method %}{% endblock %}
+
+{% block payment_details %}
+  {% block payment_details_content %}
+
+    <form id="checkout" method="post" action="{% url 'checkout:preview' %}">
+      {% csrf_token %}
+      <div id="paypal-container"></div>
+      <input type="hidden" id="braintree_nonce" name="braintree_nonce"/>
+      <input type="hidden" name="action" value="place_order" />
+      <input type="submit" class="btn btn-primary btn-lg" value="{% trans "Continue" %}">
+    </form>
+
+    <script src="https://js.braintreegateway.com/v2/braintree.js"></script>
+    <script type="text/javascript">
+      braintree.setup('{{ braintree_token }}', 'custom', {
+        paypal: {
+          container: 'paypal-container',
+          singleUse: false,
+          paymentMethodNonceInputField: 'braintree_nonce',
+          amount: {{ order_total.incl_tax }},
+          currency: '{{ order_total.currency }}',
+          // TODO Set locale
+        }
+      });
+    </script>
+    <a id="view_preview" href=""></a>
+  {% endblock payment_details_content %}
+{% endblock payment_details %}
