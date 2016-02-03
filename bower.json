@@ -10,6 +10,7 @@
     "tests"
   ],
   "dependencies": {
+    "adyen-cse-js": "~0.1.15",
     "backbone": "~1.2.1",
     "bootstrap-sass": "~3.3.4",
     "jquery": "~1.11.3",

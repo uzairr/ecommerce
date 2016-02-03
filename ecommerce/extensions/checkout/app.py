@@ -5,6 +5,7 @@ from oscar.core.loading import get_class
 
 class CheckoutApplication(app.CheckoutApplication):
     payment_view = get_class('checkout.views', 'PaymentView')
+    payment_details_view = get_class('checkout.views', 'AdyenPaymentDetailsView')
 
     def get_urls(self):
         urls = [

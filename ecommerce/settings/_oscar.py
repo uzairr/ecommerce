@@ -120,6 +120,16 @@ PAYMENT_PROCESSOR_CONFIG = {
         'cancel_url': None,
         'error_url': None,
     },
+    'adyen': {
+        'username': None,
+        'password': None,
+        'merchant_account': None,
+        'api_host': None,
+        'cse_url': None,
+        'hpp_url': None,
+        'hpp_skin_code': None,
+        'hpp_signing_key': None,
+    }
 }
 
 PAYMENT_PROCESSOR_SWITCH_PREFIX = 'payment_processor_active_'

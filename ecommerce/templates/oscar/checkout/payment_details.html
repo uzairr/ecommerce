@@ -1,0 +1,136 @@
+{% extends "checkout/checkout.html" %}
+{% load compress %}
+{% load i18n %}
+{% load staticfiles %}
+
+{% block title %}
+  {% trans "Payment details" %} | {{ block.super }}
+{% endblock %}
+
+{% block styles %}
+  {{ block.super }}
+  {% compress css %}
+    <link rel="stylesheet" type="text/css"
+          href="{% static "bower_components/adyen-cse-js/js/addOns/adyen.cardtype.css" %}"/>
+  {% endcompress %}
+{% endblock %}
+
+{% block checkout_nav %}
+  {% include 'checkout/nav.html' with step=3 %}
+{% endblock %}
+
+{% block checkout_title %}{% trans "Enter payment details" %}{% endblock %}
+
+{% block order_contents %}{% endblock %}
+{% block shipping_address %}{% endblock %}
+{% block shipping_method %}{% endblock %}
+{% block payment_method %}{% endblock %}
+
+{% block payment_details %}
+  {% block payment_details_content %}
+    <form class="form-horizontal" role="form" method="POST" action="{% url 'checkout:preview' %}"
+          id="adyen-encrypted-form">
+      {% csrf_token %}
+      <div class="form-group">
+        <label class="col-sm-3 control-label" for="holderName">Name on Card</label>
+        <div class="col-sm-9">
+          <input type="text" class="form-control" id="holderName" data-encrypted-name="holderName"
+                 placeholder="Card Holder's Name">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="col-sm-3 control-label" for="number">Card Number</label>
+        <div class="col-sm-9">
+          <input type="text" class="form-control" id="number" data-encrypted-name="number"
+                 placeholder="Debit/Credit Card Number">
+          <span id="cardType"></span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="col-sm-3 control-label" for="expiryMonth">Expiration Date</label>
+        <div class="col-sm-9">
+          <div class="row">
+            <div class="col-xs-3">
+              <select class="form-control col-sm-2" id="expiryMonth" data-encrypted-name="expiryMonth">
+                <option value="01">Jan (01)</option>
+                <option value="02">Feb (02)</option>
+                <option value="03">Mar (03)</option>
+                <option value="04">Apr (04)</option>
+                <option value="05">May (05)</option>
+                <option value="06">June (06)</option>
+                <option value="07">July (07)</option>
+                <option value="08">Aug (08)</option>
+                <option value="09">Sep (09)</option>
+                <option value="10">Oct (10)</option>
+                <option value="11">Nov (11)</option>
+                <option value="12">Dec (12)</option>
+              </select>
+            </div>
+            <div class="col-xs-3">
+              <select class="form-control" data-encrypted-name="expiryYear">
+                <option value="2016">2016</option>
+                <option value="2017">2017</option>
+                <option value="2018">2018</option>
+                <option value="2019">2019</option>
+                <option value="2020">2020</option>
+                <option value="2021">2021</option>
+                <option value="2022">2022</option>
+                <option value="2023">2023</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="col-sm-3 control-label" for="cvc">Card CVC</label>
+        <div class="col-sm-3">
+          <input type="text" class="form-control" id="cvc" data-encrypted-name="cvc" placeholder="Security Code">
+        </div>
+      </div>
+
+      <input type="hidden" value="{% now "c" %}" data-encrypted-name="generationtime"/>
+      <input type="hidden" value="place_order" name="action"/>
+
+      <div class="form-group">
+        <div class="col-sm-offset-3 col-sm-9">
+          <input type="submit" class="btn btn-success" value="{% trans "Pay" %}"/>
+        </div>
+      </div>
+    </form>
+
+    <form method="post" action="{{ adyen_hpp_url }}">
+      {% for name,value in adyen_hpp_fields.items %}
+        <input type="hidden" name="{{ name }}" value="{{ value }}"/>
+      {% endfor %}
+      <input type="submit" value="Pay via HPP"/>
+    </form>
+
+    <script type="text/javascript" src="{{ adyen_cse_url }}"></script>
+
+  {% endblock payment_details_content %}
+{% endblock payment_details %}
+
+{% block extrascripts %}
+  {{ block.super }}
+  {% compress js %}
+    <script type="text/javascript"
+            src="{% static "bower_components/adyen-cse-js/js/addOns/adyen.cardtype.js" %}"></script>
+    <script type="text/javascript">
+      // the form element to encrypt
+      var form = document.getElementById('adyen-encrypted-form');
+
+      // See adyen.encrypt.simple.html for details on the options to use
+      var options = {
+        enableValidations: true,
+        numberIgnoreNonNumeric: true
+      };
+
+      // Create the form.
+      // Note that the method is on the Adyen object, not the adyen.encrypt object.
+      var encryptedForm = adyen.createEncryptedForm(form, options);
+
+      // Detect, and display, the card type
+      encryptedForm.addCardTypeDetection(document.getElementById('cardType'));
+    </script>
+  {% endcompress %}
+{% endblock %}
