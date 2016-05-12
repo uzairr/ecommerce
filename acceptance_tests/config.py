@@ -3,20 +3,21 @@ from acceptance_tests.utils import str2bool
 
 
 ACCESS_TOKEN = os.environ.get('ACCESS_TOKEN')
-if ACCESS_TOKEN is None:
-    raise RuntimeError('A valid OAuth2 access token is required.')
+# if ACCESS_TOKEN is None:
+#     raise RuntimeError('A valid OAuth2 access token is required.')
 
 HONOR_COURSE_ID = os.environ.get('HONOR_COURSE_ID')
 VERIFIED_COURSE_ID = os.environ.get('VERIFIED_COURSE_ID')
-if not all([HONOR_COURSE_ID, VERIFIED_COURSE_ID]):
-    raise RuntimeError('IDs for courses with honor and verified modes are required.')
+# if not all([HONOR_COURSE_ID, VERIFIED_COURSE_ID]):
+#     raise RuntimeError('IDs for courses with honor and verified modes are required.')
 
 PROFESSIONAL_COURSE_ID = os.environ.get('PROFESSIONAL_COURSE_ID')
 
 try:
     ECOMMERCE_URL_ROOT = os.environ.get('ECOMMERCE_URL_ROOT').strip('/')
 except AttributeError:
-    raise RuntimeError('A valid URL root for the E-Commerce Service is required.')
+    ECOMMERCE_URL_ROOT = ''
+    # raise RuntimeError('A valid URL root for the E-Commerce Service is required.')
 
 ECOMMERCE_API_URL = os.environ.get('ECOMMERCE_API_URL', ECOMMERCE_URL_ROOT + '/api/v2')
 MAX_COMPLETION_RETRIES = int(os.environ.get('MAX_COMPLETION_RETRIES', 3))
