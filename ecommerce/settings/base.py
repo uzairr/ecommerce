@@ -536,3 +536,9 @@ ENROLLMENT_CODE_EXIPRATION_DATE = datetime.datetime.now() + datetime.timedelta(w
 
 # Affiliate cookie key
 AFFILIATE_COOKIE_KEY = 'affiliate_id'
+
+ZENDESK = {
+    'subdomain': None,
+    'api_user_email': None,
+    'api_token': None,
+}

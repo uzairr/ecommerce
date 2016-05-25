@@ -11,12 +11,12 @@ from oscar.test import factories
 from oscar.test.contextmanagers import mock_signal_receiver
 from testfixtures import LogCapture
 
+from ecommerce.core.tests.patched_httpretty import httpretty
 from ecommerce.extensions.fulfillment.status import ORDER
 from ecommerce.extensions.payment.processors.cybersource import Cybersource
 from ecommerce.extensions.payment.processors.paypal import Paypal
 from ecommerce.extensions.payment.tests.mixins import PaymentEventsMixin, CybersourceMixin, PaypalMixin
 from ecommerce.extensions.payment.views import CybersourceNotifyView, PaypalPaymentExecutionView
-from ecommerce.core.tests.patched_httpretty import httpretty
 from ecommerce.tests.testcases import TestCase
 
 Basket = get_model('basket', 'Basket')
@@ -569,3 +569,26 @@ class PaypalProfileAdminViewTests(TestCase):
         mock_call_command.side_effect = Exception("oof")
         self.get_response(True, 500, {"action": "list"})
         self.assertTrue(mock_call_command.called)
+
+
+class PaypalDisputeWebhookViewTests(TestCase):
+    path = reverse('paypal:webhooks_dispute')
+    data = {}
+
+    @mock.patch('paypalrestsdk.notifications.WebhookEvent.verify', mock.Mock(return_value=False))
+    def test_invalid_signature(self):
+        """ Verify the view returns HTTP status 403 if the signature is not valid. """
+        response = self.client.post(self.path, self.data, content_type='application/json', follow=True)
+        self.assertEqual(response.status_code, 403)
+
+    @mock.patch('paypalrestsdk.notifications.WebhookEvent.verify', mock.Mock(return_value=True))
+    def test_zendesk_ticket_creation(self):
+        """ Verify the view creates a Zendesk ticket for valid requests. """
+
+        with mock.patch('zenpy.lib.api.TicketApi.create') as mock_zenpy:
+            response = self.client.post(self.path, self.data, content_type='application/json')
+            self.assertEqual(response.status_code, 202)
+
+            # TODO Determine if Zendesk ticket created.
+            self.assertEqual(mock_zenpy.call_count, 1)
+            self.fail()

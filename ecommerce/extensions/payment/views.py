@@ -3,10 +3,11 @@ from cStringIO import StringIO
 import logging
 import os
 
+from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.core.management import call_command
 from django.db import transaction
-from django.http import Http404, HttpResponse, HttpResponseBadRequest
+from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import redirect
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
@@ -14,12 +15,13 @@ from django.views.generic import View
 from oscar.apps.partner import strategy
 from oscar.apps.payment.exceptions import PaymentError, UserCancelled, TransactionDeclined
 from oscar.core.loading import get_class, get_model
+from zenpy import Zenpy
+from zenpy.lib.api_objects import Ticket, User
 
 from ecommerce.extensions.checkout.mixins import EdxOrderPlacementMixin
 from ecommerce.extensions.payment.exceptions import InvalidSignatureError
 from ecommerce.extensions.payment.processors.cybersource import Cybersource
 from ecommerce.extensions.payment.processors.paypal import Paypal
-
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +37,7 @@ PaymentProcessorResponse = get_model('payment', 'PaymentProcessorResponse')
 
 class CybersourceNotifyView(EdxOrderPlacementMixin, View):
     """ Validates a response from CyberSource and processes the associated basket/order appropriately. """
+
     @property
     def payment_processor(self):
         return Cybersource()
@@ -173,6 +176,7 @@ class CybersourceNotifyView(EdxOrderPlacementMixin, View):
 
 class PaypalPaymentExecutionView(EdxOrderPlacementMixin, View):
     """Execute an approved PayPal payment and place an order for paid products as appropriate."""
+
     @property
     def payment_processor(self):
         return Paypal()
@@ -265,7 +269,6 @@ class PaypalPaymentExecutionView(EdxOrderPlacementMixin, View):
 
 
 class PaypalProfileAdminView(View):
-
     ACTIONS = ('list', 'create', 'show', 'update', 'delete', 'enable', 'disable')
 
     def dispatch(self, request, *args, **kwargs):
@@ -317,3 +320,56 @@ class PaypalProfileAdminView(View):
         logger.removeHandler(log_handler)
 
         return HttpResponse(output, content_type='text/plain', status=200 if success else 500)
+
+
+class PaypalDisputeWebhookView(View):
+    """ PayPal dispute webhook event handler.
+
+    This view processes dispute webhook event requests. If the requests are valid a Zendesk ticket is created
+    so that the dispute can be handled by the Support Team.
+
+    Notes:
+        - https://developer.paypal.com/docs/integration/direct/rest-webhooks-overview/
+        - https://developer.zendesk.com/rest_api/docs/core/introduction
+    """
+    @method_decorator(csrf_exempt)
+    def dispatch(self, request, *args, **kwargs):
+        return super(PaypalDisputeWebhookView, self).dispatch(request, *args, **kwargs)
+
+    def post(self, request, *_args, **_kwargs):
+        # TODO Add a switch for this view.
+        data = request.POST.dict()
+        auth_algo = request.META.get('PAYPAL-AUTH-ALGO')
+        cert_url = request.META.get('PAYPAL-CERT-URL')
+        transmission_id = request.META.get('PAYPAL-TRANSMISSION-ID')
+        transmission_sig = request.META.get('PAYPAL-TRANSMISSION-SIG')
+        transmission_time = request.META.get('PAYPAL-TRANSMISSION-TIME')
+
+        processor = Paypal()
+
+        if not processor.verify_dispute_webhook_event(
+                transmission_id, transmission_time, data, cert_url, transmission_sig, auth_algo):
+            return HttpResponseForbidden()
+
+        self.create_zendesk_ticket(data)
+        return HttpResponse(status=202)
+
+    def create_zendesk_ticket(self, data):
+        requester_email = data['buyer_email']
+        dispute_id = data['dispute_id']
+        link = 'https://www.paypal.com/us/cgi-bin/webscr?cmd=_unauth-view-details&cid={dispute_id}'.format(
+            dispute_id=dispute_id)
+        description = 'The requester has initiated a dispute at PayPal. ' \
+                      'Please visit {link} to get more information, and respond to this dispute.'.format(link=link)
+        subject = '[PayPal] Dispute created'
+        tags = ['paypal']
+
+        zendesk_settings = settings.ZENDESK
+        credentials = {
+            'subdomain': zendesk_settings.get('subdomain'),
+            'email': zendesk_settings.get('api_user_email'),
+            'token': zendesk_settings.get('api_token'),
+        }
+        zenpy = Zenpy(**credentials)
+        user = zenpy.users.create_or_update(User(email=requester_email))
+        zenpy.tickets.create(Ticket(subject=subject, description=description, tags=tags, requester_id=user.id))

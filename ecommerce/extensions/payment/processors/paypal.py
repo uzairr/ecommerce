@@ -3,6 +3,7 @@ from decimal import Decimal
 import logging
 from urlparse import urljoin
 
+from django.core.exceptions import ImproperlyConfigured
 from django.core.urlresolvers import reverse
 from django.utils.functional import cached_property
 from oscar.apps.payment.exceptions import GatewayError
@@ -12,10 +13,9 @@ import waffle
 
 from ecommerce.core.url_utils import get_ecommerce_url, get_lms_url
 from ecommerce.extensions.order.constants import PaymentEventTypeName
-from ecommerce.extensions.payment.processors import BasePaymentProcessor
 from ecommerce.extensions.payment.models import PaypalWebProfile
+from ecommerce.extensions.payment.processors import BasePaymentProcessor
 from ecommerce.extensions.payment.utils import middle_truncate
-
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +46,7 @@ class Paypal(BasePaymentProcessor):
         """
         # Number of times payment execution is retried after failure.
         self.retry_attempts = self.configuration.get('retry_attempts', 1)
+        self.dispute_webhook_id = self.configuration.get('dispute_webhook_id')
 
     @cached_property
     def paypal_api(self):
@@ -320,3 +321,20 @@ class Paypal(BasePaymentProcessor):
                   "PayPal's response was recorded in entry [{response_id}].".format(sale_id=sale.id,
                                                                                     response_id=entry.id)
             raise GatewayError(msg)
+
+    def verify_dispute_webhook_event(self, transmission_id, timestamp, event_body, cert_url, actual_signature,
+                                     auth_algo):
+        """ Verifies the authenticity of a webhook dispute request.
+
+        Notes:
+            See https://developer.paypal.com/docs/integration/direct/rest-webhooks-overview/ for more information on
+            webhooks.
+
+        Returns:
+            bool: Indicates if the request is valid.
+        """
+        if not self.dispute_webhook_id:
+            raise ImproperlyConfigured('No PayPal dispute webhook ID set. Unable to verify webhook events.')
+
+        return paypalrestsdk.notifications.WebhookEvent.verify(
+            transmission_id, timestamp, self.dispute_webhook_id, event_body, cert_url, actual_signature, auth_algo)

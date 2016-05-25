@@ -6,6 +6,7 @@ from ecommerce.extensions.payment import views
 PAYPAL_URLS = [
     url(r'^execute/$', views.PaypalPaymentExecutionView.as_view(), name='execute'),
     url(r'^profiles/$', views.PaypalProfileAdminView.as_view(), name='profiles'),
+    url(r'^webhooks/dispute/$', views.PaypalDisputeWebhookView.as_view(), name='webhooks_dispute'),
 ]
 
 urlpatterns = [
