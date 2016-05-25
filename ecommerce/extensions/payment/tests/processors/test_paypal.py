@@ -107,7 +107,7 @@ class PaypalTests(PaypalMixin, PaymentProcessorTestCaseMixin, TestCase):
         self.assert_processor_response_recorded(self.processor.NAME, self.PAYMENT_ID, response, basket=self.basket)
 
         last_request_body = json.loads(httpretty.last_request().body)
-        expected = urljoin(get_ecommerce_url(), reverse('paypal_execute'))
+        expected = urljoin(get_ecommerce_url(), reverse('paypal:execute'))
         self.assertEqual(last_request_body['redirect_urls']['return_url'], expected)
 
     @httpretty.activate

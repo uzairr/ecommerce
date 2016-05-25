@@ -1,10 +1,14 @@
 """ Payment-related URLs """
-from django.conf.urls import url
+from django.conf.urls import url, include
 
 from ecommerce.extensions.payment import views
 
+PAYPAL_URLS = [
+    url(r'^execute/$', views.PaypalPaymentExecutionView.as_view(), name='execute'),
+    url(r'^profiles/$', views.PaypalProfileAdminView.as_view(), name='profiles'),
+]
+
 urlpatterns = [
     url(r'^cybersource/notify/$', views.CybersourceNotifyView.as_view(), name='cybersource_notify'),
-    url(r'^paypal/execute/$', views.PaypalPaymentExecutionView.as_view(), name='paypal_execute'),
-    url(r'^paypal/profiles/$', views.PaypalProfileAdminView.as_view(), name='paypal_profiles'),
+    url(r'^paypal/', include(PAYPAL_URLS, namespace='paypal')),
 ]
