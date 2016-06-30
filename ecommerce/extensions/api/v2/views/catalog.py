@@ -54,6 +54,6 @@ class CatalogViewSet(NestedViewSetMixin, ReadOnlyModelViewSet):
                 ).data
                 return Response(data=[course for course in courses if course['type'] in seat_types])
             except (ConnectionError, SlumberBaseException, Timeout):
-                logger.error('Unable to connect to Course Catalog service.')
+                logger.exception('Unable to connect to Course Catalog service.')
                 return Response(status=status.HTTP_400_BAD_REQUEST)
         return Response(status=status.HTTP_400_BAD_REQUEST)
