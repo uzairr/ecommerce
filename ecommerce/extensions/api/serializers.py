@@ -294,6 +294,7 @@ class AtomicPublicationSerializer(serializers.Serializer):  # pylint: disable=ab
                 course.name = course_name
                 course.verification_deadline = course_verification_deadline
                 course.save()
+                course.partners.add(partner)
 
                 for product in products:
                     attrs = self._flatten(product['attribute_values'])

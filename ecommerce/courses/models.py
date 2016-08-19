@@ -36,6 +36,7 @@ class Course(models.Model):
     )
     history = HistoricalRecords()
     thumbnail_url = models.URLField(null=True, blank=True)
+    partners = models.ManyToManyField(Partner)
 
     def __unicode__(self):
         return unicode(self.id)
