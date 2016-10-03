@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 import csv
 import logging
 
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse
@@ -167,11 +168,15 @@ class CouponRedeemView(EdxOrderPlacementMixin, View):
 
         basket = prepare_basket(request, product, voucher)
         if basket.total_excl_tax == 0:
-            self.place_free_order(basket)
+            order = self.place_free_order(basket)
+            if order.status == 'Complete':
+                receipt_path = reverse('checkout:receipt')
+                return HttpResponseRedirect(receipt_path)
+            else:
+                error_path = reverse('checkout:error')
+                return HttpResponseRedirect(error_path)
         else:
             return HttpResponseRedirect(reverse('basket:summary'))
-
-        return HttpResponseRedirect(request.site.siteconfiguration.student_dashboard_url)
 
 
 class EnrollmentCodeCsvView(View):
