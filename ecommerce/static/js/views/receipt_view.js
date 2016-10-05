@@ -87,7 +87,7 @@ function ($, AjaxRetry, Backbone, _, Currency, StringUtils, AnalyticsUtils, Cook
         },
 
         trackPurchase: function (order) {
-            AnalyticsUtils.trackingModel.trigger('segment:track', 'Completed Order', {
+            AnalyticsUtils.trackingModel.trigger('segment:track', 'Completed Purchase', {
                 orderId: order.number,
                 total: order.total_excl_tax,
                 currency: order.currency
@@ -162,7 +162,7 @@ function ($, AjaxRetry, Backbone, _, Currency, StringUtils, AnalyticsUtils, Cook
         receiptContext: function (order) {
             var self = this,
                 receiptContext;
-            
+
             order.date_placed = new Date(order.date_placed);
             receiptContext = {
                 orderNum: order.number,
