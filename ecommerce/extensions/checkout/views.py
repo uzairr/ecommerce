@@ -14,6 +14,7 @@ from oscar.apps.checkout.views import *  # pylint: disable=wildcard-import, unus
 from oscar.core.loading import get_class, get_model
 
 from ecommerce.core.url_utils import get_ecommerce_url, get_lms_url
+from ecommerce.extensions.api.serializers import OrderSerializer
 from ecommerce.extensions.checkout.exceptions import BasketNotFreeError
 from ecommerce.extensions.checkout.mixins import EdxOrderPlacementMixin
 
@@ -148,6 +149,46 @@ class ReceiptResponseView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super(ReceiptResponseView, self).get_context_data(**kwargs)
+        order_number = self.request.GET.get('order_number')
+        try:
+            order = Order.objects.get(number=order_number, user=self.request.user)
+        except Order.DoesNotExist as ex:
+            # TODO: handle this better
+            raise ex
+
+        partner = order.site.siteconfiguration.partner
+        # TODO: get provider data
+
+        order_data = OrderSerializer(order, context={'request': self.request}).data
+        receipt = {
+            'orderNum': order.number,
+            'paymentProcessor': order_data['payment_processor'],
+            'purchasedDatetime': order_data['date_placed'],
+            'currenty': settings.OSCAR_DEFAULT_CURRENCY,
+            'items': [{
+                'lineDescription': line['description'],
+                'cost': line['line_price_excl_tax'],
+                'quantity': line['quantity']
+            } for line in order_data['lines']],
+            'vouchers': order_data['vouchers'],
+            'discount': order_data['discount'],  # TODO: check if discount is only in $ or in % too.
+            'originalCost': '100.00',  # TODO: fill this in
+            'totalCost': order_data['total_excl_tax'],
+            'email': order.user.email,
+            'discountPercentage': '%123',  # TODO: fill in
+            'isRefunded': False,
+            'billedTo': None
+        }
+
+        misc = {
+            'platformName': settings.SITE_NAME,
+            'verified': False,  # TODO: fill in
+            'lmsUrl': order.site.siteconfiguration.lms_url_root,
+            'is_verification_required': False,  # TODO: fill in
+            'courseKey': 'a/b/c'  # TODO: fill in
+        }
+        context.update(misc)
+
         page_title = _('Receipt')
         is_payment_complete = True
         payment_support_email = self.request.site.siteconfiguration.payment_support_email
@@ -159,6 +200,7 @@ class ReceiptResponseView(TemplateView):
         ).format(payment_support_link=payment_support_link)
 
         context.update({
+            'receipt': receipt,
             'page_title': page_title,
             'is_payment_complete': is_payment_complete,
             'platform_name': settings.PLATFORM_NAME,
@@ -171,7 +213,4 @@ class ReceiptResponseView(TemplateView):
             'nav_hidden': True,
             'verify_link': get_lms_url('/verify_student/verify-now/'),
             'dashboard': get_lms_url('/dashboard'),
-            'lms_url': get_lms_url(),
-        })
-
-        return context
+            'lms_url': get_lms_url

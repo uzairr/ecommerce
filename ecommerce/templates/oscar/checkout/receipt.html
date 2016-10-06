@@ -15,7 +15,6 @@
 {% endblock navbar %}
 
 {% block header_extras %}
-    <script type="text/template" id="receipt-tpl">{% include "checkout/receipt.underscore" %}</script>
     <script type="text/template" id="provider-tpl">{% include "checkout/provider.underscore" %}</script>
 {% endblock header_extras %}
 
@@ -44,8 +43,138 @@
         <div id="receipt-container" class="pay-and-verify hidden" data-is-payment-complete="{{ is_payment_complete }}"
          data-platform-name="{{ platform_name }}" data-verified='true' data-username="{{ name }}"
          data-lms-url="{{ lms_url }}">
-            <h1>{% trans "Loading Order Data..." %}</h1>
-            <span>{% trans "Please wait while we retrieve your order details." %}</span>
+        <div class="wrapper-content-main">
+          <article class="content-main">
+            <h3 class="thank-you">
+              {% trans "Thank you!" %}
+            </h3>
+
+            {% if receipt %}
+            <div class="list-info">
+              <div class="info-item payment-info">
+                      <div class="copy">
+                <div class="confirm-message">{% trans "Your order was processed successfully. Print this page for your records; it serves as your receipt. You will also receive a confirmation email with the same information at" %}
+                <a class="nav-link" href="mailto:{{ receipt.email }}">{{ receipt.email }}</a>.</div>
+                {% if receipt.billedTo %}
+                    <div class="addressed-to">
+                          <span class="name-first">{{ receipt.billedTo.firstName }}</span>
+                          <span class="name-last">{{ receipt.billedTo.lastName }}</span><br />
+                          <span class="address-city">{{ receipt.billedTo.city }}</span>,
+                          <span class="address-state">{{ receipt.billedTo.state }}</span>
+                          <span class="address-postalcode">{{ receipt.billedTo.postalCode }}</span><br />
+                          <span class="address-country">{{ receipt.billedTo.country }}</span><br />
+                    </div>
+                {% elif receipt.shipping_address %}
+                    <div class="addressed-to"><address>
+                    {% for address in receipt.shipping_address %}
+                          {{ address }} <br/>
+                    {% endfor %}
+                    </address></div>
+                {% endif %}
+
+                </div>
+                <div class="order-headers order-summary">
+                    <span class="order-number-heading">{% trans "Order Number" %}:</span>
+                    <div class="order-info">{{ receipt.orderNum }}</div>
+                    {% if receipt.paymentProcessor  %}
+                        <span class="order-payment-heading">{% trans "Payment Method" %}:</span>
+                        <div class="order-info">{{ receipt.paymentProcessor }}</div>
+                    {% endif %}
+
+                    <span class="order-date-heading">{% trans "Order Date" %}:</span>
+                    <div class="order-info">{{ receipt.purchasedDatetime }}</div>
+                    </div>
+                </div>
+
+                <div class="wrapper-report">
+                  <div class="order-headers order-details">{% trans "Order Details" %}</div>
+                  <table class="table">
+                    <thead class="order-columns">
+                      <tr>
+                        <th scope="col" >{% trans "Qty" %}.</th> <!-- Translators: Abbreviation for quantity.-->
+                        <th scope="col" >{% trans "Description" %}</th>
+                        <th class="order-amount" scope="col" >{% trans "Amount" %}</th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      {% for item in receipt.items %}
+                          <tr class="order-line-data">
+                            <td>{{ item.quantity }}</td>
+                            <td>{{ item.lineDescription }}<div class="partner">
+                            </div>
+                            {% for voucher in receipt.vouchers %}
+                                <div class="voucher-info">{% trans "Coupon applied" %}:
+                                     <span class="voucher-code">{{ voucher.code }}
+                                     {{ receipt.discountPercentage }} off</span>
+                                     <span class="discount">-{{ receipt.currency }}{{ receipt.discount }}</span>
+                               </div>
+                           {% endfor %}
+                            </td>
+                            {% if receipt.discount %}
+                                <td><div class="old-price">{{ receipt.currency }}{{ receipt.originalCost }}</div>
+                                <div class="final-price">{{ receipt.currency }}{{ item.cost }}</div></td>
+                            {% else  %}
+                                <td class="final-price">{{ receipt.currency }}{{ item.cost }}</td>
+                            {% endif %}
+                          </tr>
+                      {% endfor %}
+                    </tbody>
+
+                    <tfoot>
+                      <tr class="order-total">
+                        <td colspan="3">
+                        <div class="total-value"> {% trans "Total: " %}
+                          {{ receipt.currency }}<span class="value-amount">{{ receipt.totalCost }}</span>
+                        </div>
+                        </td>
+                      </tr>
+                    </tfoot>
+                  </table>
+
+                  {% if receipt.isRefunded %}
+                  <div class="msg msg-refunds">
+                    <h4 class="title sr">{% trans "Please Note" %}: </h4>
+                    <div class="copy">
+                      <p>{% trans "Crossed out items have been refunded." %}</p>
+                    </div>
+                  </div>
+                  {% endif %}
+                </div>
+
+                <div class="report-receipt-provider hidden" id="receipt-provider"></div>
+
+              </div>
+            </div>
+            {% else %}
+                <p class="no-content">{% trans "No receipt available" %}</p>
+            {% endif %}
+
+            <nav class="nav-wizard is-ready">
+                {% if not is_verification_required or verified %}
+                    <div id="verify_choices"><a class="verify-later nav-link" href="{{ lmsUrl }}/dashboard">
+                    {% trans "Go to Dashboard" %}</a></div>
+                {% else %}
+                  <div id="verify_message">{% trans "Before you can receive a verified certificate for this course, you must verify your identity" %}</div>
+                  <div id="verify_choices" class="right">
+                  <a id="verify_now_button"
+                     class="next action-primary"
+                     href="{{ lmsUrl }}/verify_student/verify-now/{{ courseKey }}/"
+                     data-track-type="click" data-track-event="edx.bi.user.verification.deferred"
+                     data-track-category="verification"
+                  >{% trans "Verify Now" %}
+                  </a>
+                  <a id="verify_later_button" class="verify-later" href="{{ lmsUrl }}/dashboard"
+                  data-track-type="click" data-track-event="edx.bi.user.verification.immediate"
+                  data-track-category="verification">
+                   <span class="nav-link">{% trans "Take me to dashboard" %}</span>
+                  </a>
+                  </div>
+                {% endif %}
+            </nav>
+          </article>
+        </div>
+
         </div>
     </div>
 </div>
