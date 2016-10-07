@@ -28,25 +28,11 @@ function ($, AjaxRetry, Backbone, _, Currency, StringUtils, AnalyticsUtils, Cook
         },
 
         renderReceipt: function (data) {
-            var receiptTemplate = $('#receipt-tpl').html(),
-                context = {
-                    platformName: this.$el.data('platform-name'),
-                    verified: this.$el.data('verified') === 'true',
-                    lmsUrl: this.$el.data('lms-url'),
-                    is_verification_required: this.getVerificationRequired(data)
-                },
-                providerId;
+            var providerId;
 
             // Add the receipt info to the template context
             this.courseKey = this.getOrderCourseKey(data);
             this.username = this.$el.data('username');
-            _.extend(context, {
-                receipt: this.receiptContext(data),
-                courseKey: this.courseKey
-            });
-
-            this.$el.html(_.template(receiptTemplate)(context));
-            this.getPartnerData(data).then(this.renderPartner, this.renderError);
             providerId = this.getCreditProviderId(data);
             if (providerId) {
                 this.getProviderData(this.$el.data('lms-url'), providerId).then(this.renderProvider, this.renderError);
@@ -66,10 +52,6 @@ function ($, AjaxRetry, Backbone, _, Currency, StringUtils, AnalyticsUtils, Cook
                 }
             }
             return false;
-        },
-
-        renderPartner: function (data){
-          $('.partner').text(data.name);
         },
 
         renderProvider: function (context) {
@@ -100,24 +82,11 @@ function ($, AjaxRetry, Backbone, _, Currency, StringUtils, AnalyticsUtils, Cook
             if (this.orderId) {
                 // Get the order details
                 self.$el.removeClass('hidden');
-                self.getReceiptData(this.orderId).then(self.renderReceipt, self.renderError);
             } else {
                 this.renderError();
             }
         },
 
-        /**
-         * Retrieve receipt data from Otto.
-         * @param  {string} orderId Identifier of the order that was purchased.
-         * @return {object} JQuery Promise.
-         */
-        getReceiptData: function (orderId) {
-            return $.ajax({
-                url: StringUtils.interpolate('/api/v2/orders/{orderId}/', {orderId: orderId}),
-                type: 'GET',
-                dataType: 'json'
-            }).retry({times: 5, timeout: 2000, statusCodes: [404]});
-        },
         /**
          * Retrieve credit provider data from LMS.
          * @param  {string} lmsUrl The base url of the LMS instance.
@@ -152,62 +121,6 @@ function ($, AjaxRetry, Backbone, _, Currency, StringUtils, AnalyticsUtils, Cook
             }).retry({times: 5, timeout: 2000, statusCodes: [404]});
         },
 
-        /**
-         * Construct the template context from data received
-         * from the E-Commerce API.
-         *
-         * @param  {object} order Receipt data received from the server
-         * @return {object} Receipt template context.
-         */
-        receiptContext: function (order) {
-            var self = this,
-                receiptContext;
-
-            order.date_placed = new Date(order.date_placed);
-            receiptContext = {
-                orderNum: order.number,
-                currency: Currency.symbolize(order.currency),
-                email: order.user.email,
-                vouchers: order.vouchers,
-                paymentProcessor: order.payment_processor,
-                shipping_address: order.shipping_address,
-                purchasedDatetime: StringUtils.interpolate('{month} {day}, {year}',
-                    {month: Date.getMonthNameFromNumber(order.date_placed.getMonth()),
-                        day: order.date_placed.getDate(), year: order.date_placed.getFullYear()}),
-                totalCost: self.formatMoney(order.total_excl_tax),
-                originalCost: self.formatMoney(parseInt(order.discount) + parseInt(order.total_excl_tax)),
-                discount: order.discount,
-                discountPercentage: parseInt(order.discount) / (parseInt(order.discount) +
-                                    parseInt(order.total_excl_tax)) * 100,
-                isRefunded: false,
-                items: [],
-                billedTo: null
-            };
-
-            if (order.billing_address) {
-                receiptContext.billedTo = {
-                    firstName: order.billing_address.first_name,
-                    lastName: order.billing_address.last_name,
-                    city: order.billing_address.city,
-                    state: order.billing_address.state,
-                    postalCode: order.billing_address.postcode,
-                    country: order.billing_address.country
-                };
-            }
-
-            receiptContext.items = _.map(
-                order.lines,
-                function (line) {
-                    return {
-                        lineDescription: line.description,
-                        cost: self.formatMoney(line.line_price_excl_tax),
-                        quantity: line.quantity
-                    };
-                }
-            );
-            return receiptContext;
-        },
-
         getOrderCourseKey: function (order) {
             var length;
             length = order.lines.length;
@@ -230,10 +143,6 @@ function ($, AjaxRetry, Backbone, _, Currency, StringUtils, AnalyticsUtils, Cook
             }
 
             return null;
-        },
-
-        formatMoney: function (moneyStr) {
-            return Number(moneyStr).toFixed(2);
         },
 
         /**
