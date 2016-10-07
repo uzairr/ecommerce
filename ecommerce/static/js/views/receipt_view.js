@@ -24,27 +24,31 @@ function ($, AjaxRetry, Backbone, _, Currency, StringUtils, AnalyticsUtils, Cook
 
         initialize: function () {
             this.orderId = this.orderId || $.url('?order_number');
-            _.bindAll(this, 'renderReceipt', 'renderError');
+            this.renderReceipt();
         },
 
-        renderReceipt: function (data) {
+        renderReceipt: function () {
             // After fully rendering the template, attach analytics click handlers
             AnalyticsUtils.instrumentClickEvents();
             // Fire analytics event that order has completed
-            // this.trackPurchase(data);
+            this.trackPurchase();
             return this;
         },
 
-        renderError: function () {
-            // Display an error banner
-            $('#error-container').removeClass('hidden');
-        },
-
-        trackPurchase: function (order) {
-            AnalyticsUtils.trackingModel.trigger('segment:track', 'Completed Purchase', {
-                orderId: order.number,
-                total: order.total_excl_tax,
-                currency: order.currency
+        trackPurchase: function() {
+            $.ajax({
+                url: '/api/v2/orders/' + this.orderId,
+                method: 'GET',
+                headers: {
+                    'X-CSRFToken': Cookies.get('ecommerce_csrftoken')
+                },
+                success: function(data) {
+                    AnalyticsUtils.trackingModel.trigger('segment:track', 'Completed Purchase', {
+                        orderId: data.number,
+                        total: data.total_excl_tax,
+                        currency: data.currency
+                    });
+                }
             });
         },
 
