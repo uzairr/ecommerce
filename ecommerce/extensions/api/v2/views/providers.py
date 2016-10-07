@@ -18,5 +18,10 @@ class ProviderViewSet(APIView):
             credit_provider_id=credit_provider_id,
             site_configuration=request.site.siteconfiguration
         )
-        response_data = ProviderSerializer(provider_data).data if provider_data else None
+        if not provider_data:
+            response_data = None
+        elif isinstance(provider_data, dict):
+            response_data = ProviderSerializer(provider_data).data
+        else:
+            response_data = ProviderSerializer(provider_data, many=True).data
         return Response(response_data)
