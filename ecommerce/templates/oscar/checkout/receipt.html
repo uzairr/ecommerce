@@ -36,9 +36,13 @@
     </div>
 
     <div class="container content-container">
-        <div id="receipt-container" class="pay-and-verify hidden" data-is-payment-complete="{{ is_payment_complete }}"
-         data-platform-name="{{ platform_name }}" data-verified="{{ verified }}" data-username="{{ name }}"
-         data-lms-url="{{ lms_url }}">
+        <div id="receipt-container"
+          class="pay-and-verify hidden"
+          data-is-payment-complete="{{ is_payment_complete }}"
+          data-platform-name="{{ platform_name }}"
+          data-verified="{{ verified }}"
+          data-username="{{ name }}"
+          data-lms-url="{{ lms_url }}">
         <div class="wrapper-content-main">
           <article class="content-main">
             <h3 class="thank-you">
@@ -47,8 +51,8 @@
 
             {% if receipt %}
             <div class="list-info">
-              <div class="info-item payment-info">
-                      <div class="copy">
+              <div class="info-item payment-info row">
+                <div class="copy col-md-8">
                 <div class="confirm-message">{% trans "Your order was processed successfully. Print this page for your records; it serves as your receipt. You will also receive a confirmation email with the same information at" %}
                 <a class="nav-link" href="mailto:{{ receipt.email }}">{{ receipt.email }}</a>.</div>
                 {% if receipt.billed_to %}
@@ -69,7 +73,7 @@
                 {% endif %}
 
                 </div>
-                <div class="order-headers order-summary">
+                <div class="order-headers order-summary col-md-4">
                     <span class="order-number-heading">{% trans "Order Number" %}:</span>
                     <div class="order-info">{{ receipt.order_number }}</div>
                     {% if receipt.payment_processor  %}
@@ -84,6 +88,7 @@
 
                 <div class="wrapper-report">
                   <div class="order-headers order-details">{% trans "Order Details" %}</div>
+                  <div class="table-responsive">
                   <table class="table">
                     <thead class="order-columns">
                       <tr>
@@ -127,7 +132,7 @@
                       </tr>
                     </tfoot>
                   </table>
-
+                  </div>
                   {% if receipt.is_refunded %}
                   <div class="msg msg-refunds">
                     <h4 class="title sr">{% trans "Please Note" %}: </h4>
@@ -139,8 +144,8 @@
                 </div>
 
                 {% if provider_data %}
-                <div class="report-receipt-provider" id="receipt-provider">
-                  <div class="provider-wrapper">
+                <div class="report-receipt-provider row" id="receipt-provider">
+                  <div class="provider-wrapper col-md-9">
                     <div class="provider-info">
                       {% blocktrans %}
                       You still need to visit the {{ provider_data.display_name }} website to complete the credit process.
@@ -156,13 +161,12 @@
                     </div>
                   </div>
 
-                  <div class="provider-buttons-logos">
+                  <div class="provider-buttons-logos col-md-3">
                     <div class="provider-logo">
                       <img src='{{ provider_data.thumbnail_url }}' alt='{{ provider_data.display_name }}' />
                     </div>
-                    <div class="complete-order">
                       <a id="credit-button"
-                        class="complete-course"
+                        class="complete-course btn-neutral"
                         data-course-key="{{ course_key }}"
                         data-provider="{{ provider_data.id }}"
                         data-track-category="credit"
@@ -173,7 +177,6 @@
                         href="{{ provider_data.url }}">
                        {% trans  "Get Credit" %}
                       </a>
-                    </div>
                   </div>
                 </div>
                 {% endif %}
@@ -183,13 +186,13 @@
                 <p class="no-content">{% trans "No receipt available" %}</p>
             {% endif %}
 
-            <nav class="nav-wizard is-ready">
+            <div class="nav-wizard is-ready row">
                 {% if not is_verification_required or verified %}
                     <div id="verify_choices"><a class="verify-later nav-link" href="{{ lms_url }}/dashboard">
                     {% trans "Go to Dashboard" %}</a></div>
                 {% else %}
-                  <div id="verify_message">{% trans "Before you can receive a verified certificate for this course, you must verify your identity" %}</div>
-                  <div id="verify_choices" class="right">
+                  <div id="verify_message" class="col-md-9">{% trans "Before you can receive a verified certificate for this course, you must verify your identity" %}</div>
+                  <div id="verify_choices" class="right col-md-3">
                   <a id="verify_now_button"
                     class="next action-primary"
                     data-track-category="verification"
@@ -208,7 +211,7 @@
                   </a>
                   </div>
                 {% endif %}
-            </nav>
+            </div>
           </article>
         </div>
 
