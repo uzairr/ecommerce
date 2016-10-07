@@ -161,10 +161,18 @@
                       <img src='{{ provider_data.thumbnail_url }}' alt='{{ provider_data.display_name }}' />
                     </div>
                     <div class="complete-order">
-                      <button id="credit-button" data-provider="{{ provider_data.id }}" data-course-key="{{ course_key }}" data-username="{{ username }}"
-                       class="complete-course" data-track-type="click" data-track-event="edx.bi.credit.clicked_complete_credit"
-                       data-track-category="credit" data-track-label="{{ course_key }}" onClick=getCredit(this)>
-                       {% trans  "Get Credit" %}</button>
+                      <a id="credit-button"
+                        class="complete-course"
+                        data-course-key="{{ course_key }}"
+                        data-provider="{{ provider_data.id }}"
+                        data-track-category="credit"
+                        data-track-event="edx.bi.credit.clicked_complete_credit"
+                        data-track-label="{{ course_key }}"
+                        data-track-type="click"
+                        data-username="{{ username }}"
+                        href="{{ provider_data.url }}">
+                       {% trans  "Get Credit" %}
+                      </a>
                     </div>
                   </div>
                 </div>
@@ -183,15 +191,19 @@
                   <div id="verify_message">{% trans "Before you can receive a verified certificate for this course, you must verify your identity" %}</div>
                   <div id="verify_choices" class="right">
                   <a id="verify_now_button"
-                     class="next action-primary"
-                     href="{{ lms_url }}/verify_student/verify-now/{{ course_key }}/"
-                     data-track-type="click" data-track-event="edx.bi.user.verification.deferred"
-                     data-track-category="verification"
-                  >{% trans "Verify Now" %}
+                    class="next action-primary"
+                    data-track-category="verification"
+                    data-track-event="edx.bi.user.verification.deferred"
+                    data-track-type="click"
+                    href="{{ lms_url }}/verify_student/verify-now/{{ course_key }}/">
+                    {% trans "Verify Now" %}
                   </a>
-                  <a id="verify_later_button" class="verify-later" href="{{ lms_url }}/dashboard"
-                  data-track-type="click" data-track-event="edx.bi.user.verification.immediate"
-                  data-track-category="verification">
+                  <a id="verify_later_button"
+                    class="verify-later"
+                    data-track-category="verification"
+                    data-track-event="edx.bi.user.verification.immediate"
+                    data-track-type="click"
+                    href="{{ lms_url }}/dashboard">
                    <span class="nav-link">{% trans "Take me to dashboard" %}</span>
                   </a>
                   </div>
