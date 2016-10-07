@@ -213,4 +213,7 @@ class ReceiptResponseView(TemplateView):
             'nav_hidden': True,
             'verify_link': get_lms_url('/verify_student/verify-now/'),
             'dashboard': get_lms_url('/dashboard'),
-            'lms_url': get_lms_url
+            'lms_url': get_lms_url(),
+        })
+
+        return context

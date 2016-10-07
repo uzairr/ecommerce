@@ -651,3 +651,14 @@ class SiteConfigurationSerializer(serializers.ModelSerializer):
 
     class Meta(object):
         model = SiteConfiguration
+
+
+class ProviderSerializer(serializers.Serializer):  # pylint: disable=abstract-method
+    id = serializers.CharField()
+    display_name = serializers.CharField()
+    url = serializers.CharField()
+    status_url = serializers.CharField()
+    description = serializers.CharField()
+    enable_integration = serializers.BooleanField()
+    fulfillment_instructions = serializers.CharField()
+    thumbnail_url = serializers.CharField()

@@ -1,0 +1,22 @@
+"""HTTP endpoint for displaying information about providers."""
+import logging
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+
+from ecommerce.extensions.api.serializers import ProviderSerializer
+from ecommerce.extensions.checkout.utils import get_credit_provider_details
+
+logger = logging.getLogger(__name__)
+
+
+class ProviderViewSet(APIView):
+    def get(self, request):
+        credit_provider_id = request.GET.get('credit_provider_id')
+        provider_data = get_credit_provider_details(
+            access_token=request.user.access_token,
+            credit_provider_id=credit_provider_id,
+            site_configuration=request.site.siteconfiguration
+        )
+        response_data = ProviderSerializer(provider_data).data if provider_data else None
+        return Response(response_data)
