@@ -24,43 +24,15 @@ function ($, AjaxRetry, Backbone, _, Currency, StringUtils, AnalyticsUtils, Cook
 
         initialize: function () {
             this.orderId = this.orderId || $.url('?order_number');
-            _.bindAll(this, 'renderReceipt', 'renderError', 'getProviderData', 'renderProvider');
+            _.bindAll(this, 'renderReceipt', 'renderError');
         },
 
         renderReceipt: function (data) {
-            var providerId;
-
-            // Add the receipt info to the template context
-            this.courseKey = this.getOrderCourseKey(data);
-            this.username = this.$el.data('username');
-            providerId = this.getCreditProviderId(data);
-            if (providerId) {
-                this.getProviderData(this.$el.data('lms-url'), providerId).then(this.renderProvider, this.renderError);
-            }
             // After fully rendering the template, attach analytics click handlers
             AnalyticsUtils.instrumentClickEvents();
             // Fire analytics event that order has completed
-            this.trackPurchase(data);
+            // this.trackPurchase(data);
             return this;
-        },
-
-        getVerificationRequired: function (order) {
-            var lineAttributes = order.lines[0].product.attribute_values;
-            for (var i = 0; i < lineAttributes.length; i++) {
-                if (lineAttributes[i].name === 'id_verification_required') {
-                    return lineAttributes[i].value;
-                }
-            }
-            return false;
-        },
-
-        renderProvider: function (context) {
-            var templateHtml = $('#provider-tpl').html(),
-                providerDiv = this.$el.find('#receipt-provider');
-            context.course_key = this.courseKey;
-            context.username = this.username;
-            context.platformName = this.$el.data('platform-name');
-            providerDiv.html(_.template(templateHtml)(context)).removeClass('hidden');
         },
 
         renderError: function () {
@@ -85,85 +57,6 @@ function ($, AjaxRetry, Backbone, _, Currency, StringUtils, AnalyticsUtils, Cook
             } else {
                 this.renderError();
             }
-        },
-
-        /**
-         * Retrieve credit provider data from LMS.
-         * @param  {string} lmsUrl The base url of the LMS instance.
-         * @param  {string} providerId The providerId of the credit provider.
-         * @return {object} JQuery Promise.
-         */
-        getProviderData: function (lmsUrl, providerId) {
-            return $.ajax({
-                url: StringUtils.interpolate('{lmsUrl}/api/credit/v1/providers/{providerId}/',
-                    {lmsUrl: lmsUrl, providerId: providerId}),
-                type: 'GET',
-                dataType: 'json',
-                contentType: 'application/json',
-                headers: {
-                    'X-CSRFToken': Cookies.get('ecommerce_csrftoken')
-                }
-            }).retry({times: 5, timeout: 2000, statusCodes: [404]});
-        },
-
-        /**
-         * Retrieve partner data from Otto.
-         * @param  {string} order The order whose partner to retrieve.
-         * @return {object} JQuery Promise.
-         */
-        getPartnerData: function (order) {
-            return $.ajax({
-                url: StringUtils.interpolate('/api/v2/partners/{partnerId}/',
-                    {partnerId: order.lines[0].product.stockrecords[0].partner}),
-                type: 'GET',
-                dataType: 'json',
-                contentType: 'application/json'
-            }).retry({times: 5, timeout: 2000, statusCodes: [404]});
-        },
-
-        getOrderCourseKey: function (order) {
-            var length;
-            length = order.lines.length;
-            for (var i = 0; i < length; i++) {
-                var line = order.lines[i],
-                    attributeValues = _.find(line.product.attribute_values, function (attribute) {
-                        // If the attribute has a 'code' property, compare its value, otherwise compare 'name'
-                        var value_to_match = 'course_key';
-                        if (attribute.code) {
-                            return attribute.code === value_to_match;
-                        } else {
-                            return attribute.name === value_to_match;
-                        }
-                    });
-
-                // This method assumes that all items in the order are related to a single course.
-                if (attributeValues !== undefined) {
-                    return attributeValues.value;
-                }
-            }
-
-            return null;
-        },
-
-        /**
-         * Check whether the payment is for the credit course or not.
-         *
-         * @param  {object} order Receipt data received from the server
-         * @return {string} String of the provider_id or null.
-         */
-        getCreditProviderId: function (order) {
-            var attributeValues,
-                line = order.lines[0];
-            attributeValues = _.find(line.product.attribute_values, function (attribute) {
-                return attribute.name === 'credit_provider';
-            });
-
-            // This method assumes that all items in the order are related to a single course.
-            if (attributeValues !== undefined) {
-                return attributeValues.value;
-            }
-
-            return null;
         },
 
         /**

@@ -2,8 +2,8 @@
 from __future__ import unicode_literals
 from decimal import Decimal
 
+import dateutil.parser
 import waffle
-
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
@@ -17,6 +17,7 @@ from ecommerce.core.url_utils import get_ecommerce_url, get_lms_url
 from ecommerce.extensions.api.serializers import OrderSerializer
 from ecommerce.extensions.checkout.exceptions import BasketNotFreeError
 from ecommerce.extensions.checkout.mixins import EdxOrderPlacementMixin
+from ecommerce.extensions.checkout.utils import add_currency, get_credit_provider_details
 
 Applicator = get_class('offer.utils', 'Applicator')
 Basket = get_model('basket', 'Basket')
@@ -156,36 +157,43 @@ class ReceiptResponseView(TemplateView):
             # TODO: handle this better
             raise ex
 
-        partner = order.site.siteconfiguration.partner
-        # TODO: get provider data
+        seat = order.lines.first().product
+        provider_data = None
+        if seat.attr.certificate_type == 'credit':
+            provider_data = get_credit_provider_details(
+                access_token=self.request.user.access_token,
+                credit_provider_id=seat.attr.credit_provider,
+                site_configuration=self.request.site.siteconfiguration
+            )
+        context.update({'provider_data': provider_data})
 
         order_data = OrderSerializer(order, context={'request': self.request}).data
         receipt = {
-            'orderNum': order.number,
-            'paymentProcessor': order_data['payment_processor'],
-            'purchasedDatetime': order_data['date_placed'],
-            'currenty': settings.OSCAR_DEFAULT_CURRENCY,
+            'order_number': order.number,
+            'payment_processor': order_data['payment_processor'],
+            'purchased_datetime': dateutil.parser.parse(order_data['date_placed']).strftime('%d. %B %Y'),
             'items': [{
-                'lineDescription': line['description'],
-                'cost': line['line_price_excl_tax'],
+                'description': line['description'],
+                'cost': add_currency(float(line['line_price_excl_tax'])),
                 'quantity': line['quantity']
             } for line in order_data['lines']],
             'vouchers': order_data['vouchers'],
-            'discount': order_data['discount'],  # TODO: check if discount is only in $ or in % too.
-            'originalCost': '100.00',  # TODO: fill this in
-            'totalCost': order_data['total_excl_tax'],
+            'discount': add_currency(float(order_data['discount'])),
+            'original_cost': add_currency(float(order_data['discount']) + float(order_data['total_excl_tax'])),
+            'total_cost': add_currency(float(order_data['total_excl_tax'])),
             'email': order.user.email,
-            'discountPercentage': '%123',  # TODO: fill in
-            'isRefunded': False,
-            'billedTo': None
+            'discount_percentage':
+            float(order_data['discount']) / (float(order_data['discount']) + float(order_data['total_excl_tax'])) * 100,
+            'is_refunded': False,
+            'billed_to': None
         }
 
         misc = {
-            'platformName': settings.SITE_NAME,
-            'verified': False,  # TODO: fill in
-            'lmsUrl': order.site.siteconfiguration.lms_url_root,
-            'is_verification_required': False,  # TODO: fill in
-            'courseKey': 'a/b/c'  # TODO: fill in
+            'platform_name': settings.SITE_NAME,
+            'verified': seat.attr.certificate_type == 'verified',
+            'lms_url': order.site.siteconfiguration.lms_url_root,
+            'is_verification_required': seat.attr.id_verification_required,
+            'course_key': seat.attr.course_key
         }
         context.update(misc)
 
