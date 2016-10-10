@@ -206,7 +206,7 @@ class OrderSerializer(serializers.ModelSerializer):
             discount = obj.discounts.all()[0]
             return str(discount.amount)
         except IndexError:
-            return None
+            return '0'
 
     class Meta(object):
         model = Order

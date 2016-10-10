@@ -141,10 +141,10 @@ class ReceiptResponseView(TemplateView):
             order = Order.objects.get(number=order_number, user=self.request.user)
         except Order.DoesNotExist:
             context.update({
-                'is_payment_complete': False,
-                'page_title': _('Order not found'),
                 'error_text': _('Order {order_number} not found.').format(order_number=order_number),
-                'for_help_text': ''
+                'for_help_text': '',
+                'is_payment_complete': False,
+                'page_title': _('Order not found')
             })
             return self.render_to_response(context)
 
@@ -190,7 +190,7 @@ class ReceiptResponseView(TemplateView):
             'lms_url': order.site.siteconfiguration.lms_url_root,
             'provider_data': provider_data,
             'receipt': receipt,
-            'verified': seat.attr.certificate_type == 'verified',
+            'verified': seat.attr.certificate_type == 'verified'
         })
 
         return self.render_to_response(context)
