@@ -18,6 +18,7 @@ from ecommerce.extensions.api.serializers import OrderSerializer
 from ecommerce.extensions.checkout.exceptions import BasketNotFreeError
 from ecommerce.extensions.checkout.mixins import EdxOrderPlacementMixin
 from ecommerce.extensions.checkout.utils import add_currency, get_credit_provider_details
+from ecommerce.extensions.offer.utils import get_discount_percentage
 
 Applicator = get_class('offer.utils', 'Applicator')
 Basket = get_model('basket', 'Basket')
@@ -132,24 +133,9 @@ class ReceiptResponseView(TemplateView):
         """
         return super(ReceiptResponseView, self).dispatch(*args, **kwargs)
 
-    def post(self, request, *args, **kwargs):  # pylint: disable=unused-argument
+    def get(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
-        # CyberSource responses will indicate whether a payment failed due to a transaction on their end. In this case,
-        # we can provide the learner more detailed information in the error message.
-        if request.POST['decision'] != 'ACCEPT':
-            context.update({
-                'is_payment_complete': False,
-                'page_title': _('Payment Failed'),
-                'error_summary': _("A system error occurred while processing your payment. You have not been charged."),
-                'error_text': _("Please wait a few minutes and then try again."),
-                'for_help_text': _(
-                    "For help, contact {payment_support_link}."
-                ).format(payment_support_link=context['payment_support_link'])
-            })
-        return self.render_to_response(context)
 
-    def get_context_data(self, **kwargs):
-        context = super(ReceiptResponseView, self).get_context_data(**kwargs)
         order_number = self.request.GET.get('order_number')
         try:
             order = Order.objects.get(number=order_number, user=self.request.user)
@@ -165,63 +151,82 @@ class ReceiptResponseView(TemplateView):
                 credit_provider_id=seat.attr.credit_provider,
                 site_configuration=self.request.site.siteconfiguration
             )
-        context.update({'provider_data': provider_data})
 
         order_data = OrderSerializer(order, context={'request': self.request}).data
+        discount_value = float(order_data['discount'])
+        total_cost = float(order_data['total_excl_tax'])
+        original_cost = discount_value + total_cost
+
         receipt = {
-            'order_number': order.number,
-            'payment_processor': order_data['payment_processor'],
-            'purchased_datetime': dateutil.parser.parse(order_data['date_placed']).strftime('%d. %B %Y'),
+            'billed_to': None,
+            'discount': add_currency(discount_value),
+            'discount_percentage': get_discount_percentage(
+                discount_value=discount_value,
+                product_price=original_cost
+            ),
+            'email': order.user.email,
+            'is_refunded': False,
             'items': [{
                 'description': line['description'],
                 'cost': add_currency(float(line['line_price_excl_tax'])),
                 'quantity': line['quantity']
             } for line in order_data['lines']],
-            'vouchers': order_data['vouchers'],
-            'discount': add_currency(float(order_data['discount'])),
-            'original_cost': add_currency(float(order_data['discount']) + float(order_data['total_excl_tax'])),
-            'total_cost': add_currency(float(order_data['total_excl_tax'])),
-            'email': order.user.email,
-            'discount_percentage':
-            float(order_data['discount']) / (float(order_data['discount']) + float(order_data['total_excl_tax'])) * 100,
-            'is_refunded': False,
-            'billed_to': None
+            'order_number': order.number,
+            'original_cost': add_currency(original_cost),
+            'payment_processor': order_data['payment_processor'],
+            'purchased_datetime': dateutil.parser.parse(order_data['date_placed']).strftime('%d. %B %Y'),
+            'total_cost': add_currency(total_cost),
+            'vouchers': order_data['vouchers']
         }
-
-        misc = {
-            'platform_name': settings.SITE_NAME,
-            'verified': seat.attr.certificate_type == 'verified',
-            'lms_url': order.site.siteconfiguration.lms_url_root,
-            'is_verification_required': seat.attr.id_verification_required,
-            'course_key': seat.attr.course_key
-        }
-        context.update(misc)
-
-        page_title = _('Receipt')
-        is_payment_complete = True
-        payment_support_email = self.request.site.siteconfiguration.payment_support_email
-        payment_support_link = '<a href="mailto:{email}">{email}</a>'.format(email=payment_support_email)
-        error_summary = _("An error occurred while creating your receipt.")
-        error_text = None
-        for_help_text = _(
-            "If your course does not appear on your dashboard, contact {payment_support_link}."
-        ).format(payment_support_link=payment_support_link)
 
         context.update({
+            'course_key': seat.attr.course_key,
+            'is_verification_required': seat.attr.id_verification_required,
+            'lms_url': order.site.siteconfiguration.lms_url_root,
+            'provider_data': provider_data,
             'receipt': receipt,
-            'page_title': page_title,
-            'is_payment_complete': is_payment_complete,
-            'platform_name': settings.PLATFORM_NAME,
-            'error_summary': error_summary,
-            'error_text': error_text,
-            'for_help_text': for_help_text,
-            'payment_support_email': payment_support_email,
-            'payment_support_link': payment_support_link,
+            'verified': seat.attr.certificate_type == 'verified',
+        })
+        return self.render_to_response(context)
+
+    def post(self, request, *args, **kwargs):  # pylint: disable=unused-argument
+        context = self.get_context_data(**kwargs)
+        # CyberSource responses will indicate whether a payment failed due to a transaction on their end. In this case,
+        # we can provide the learner more detailed information in the error message.
+        if request.POST['decision'] != 'ACCEPT':
+            context.update({
+                'is_payment_complete': False,
+                'page_title': _('Payment Failed'),
+                'error_summary': _('A system error occurred while processing your payment. You have not been charged.'),
+                'error_text': _('Please wait a few minutes and then try again.'),
+                'for_help_text': _(
+                    'For help, contact {payment_support_link}.'
+                ).format(payment_support_link=context['payment_support_link'])
+            })
+        return self.render_to_response(context)
+
+    def get_context_data(self, **kwargs):
+        context = super(ReceiptResponseView, self).get_context_data(**kwargs)
+
+        payment_support_email = self.request.site.siteconfiguration.payment_support_email
+        payment_support_link = '<a href="mailto:{email}">{email}</a>'.format(email=payment_support_email)
+
+        context.update({
+            'dashboard': get_lms_url('/dashboard'),
+            'error_summary': _('An error occurred while creating your receipt.'),
+            'error_text': None,
+            'for_help_text': _(
+                "If your course does not appear on your dashboard, contact {payment_support_link}."
+            ).format(payment_support_link=payment_support_link),
+            'is_payment_complete': True,
+            'lms_url': get_lms_url(),
             'name': '{} {}'.format(self.request.user.first_name, self.request.user.last_name),
             'nav_hidden': True,
-            'verify_link': get_lms_url('/verify_student/verify-now/'),
-            'dashboard': get_lms_url('/dashboard'),
-            'lms_url': get_lms_url(),
+            'page_title': _('Receipt'),
+            'payment_support_email': payment_support_email,
+            'payment_support_link': payment_support_link,
+            'platform_name': settings.SITE_NAME,
+            'verify_link': get_lms_url('/verify_student/verify-now/')
         })
 
         return context

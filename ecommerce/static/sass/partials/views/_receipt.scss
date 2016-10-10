@@ -81,12 +81,15 @@
         box-shadow: 0 1px 2px 1px rgba(0, 0, 0, 0.2) inset;
 
         .verify-later {
-            display: block;
-            margin: 15px 0;
             line-height: 20px;
         }
 
+        #verify_now {
+            margin-bottom: 10px;
+        }
+
         #verify_choices {
+            margin-bottom: 10px;
             padding-top: 10px;
             text-align: center;
         }
@@ -174,7 +177,7 @@
     .report-receipt-provider {
         @include clearfix;
         margin: 0 0 20px 0;
-        padding: ($baseline*0.75) $baseline;
+        padding: 15px 20px;
         border: 1px solid rgb(221,221,221);
         border-radius: 3px;
         box-shadow: 0 1px 2px 1px rgba(0,0,0,0.1);
@@ -185,7 +188,7 @@
             padding: 10px;
 
             .provider-info {
-                margin-bottom: $baseline;
+                margin-bottom: 20px;
                 font-weight: 600;
             }
         }

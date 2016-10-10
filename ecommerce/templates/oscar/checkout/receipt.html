@@ -175,7 +175,7 @@
                         data-track-type="click"
                         data-username="{{ username }}"
                         href="{{ provider_data.url }}">
-                       {% trans  "Get Credit" %}
+                        {% trans  "Get Credit" %}
                       </a>
                   </div>
                 </div>
@@ -193,22 +193,24 @@
                 {% else %}
                   <div id="verify_message" class="col-md-9">{% trans "Before you can receive a verified certificate for this course, you must verify your identity" %}</div>
                   <div id="verify_choices" class="right col-md-3">
-                  <a id="verify_now_button"
-                    class="next action-primary"
-                    data-track-category="verification"
-                    data-track-event="edx.bi.user.verification.deferred"
-                    data-track-type="click"
-                    href="{{ lms_url }}/verify_student/verify-now/{{ course_key }}/">
-                    {% trans "Verify Now" %}
-                  </a>
-                  <a id="verify_later_button"
-                    class="verify-later"
-                    data-track-category="verification"
-                    data-track-event="edx.bi.user.verification.immediate"
-                    data-track-type="click"
-                    href="{{ lms_url }}/dashboard">
-                   <span class="nav-link">{% trans "Take me to dashboard" %}</span>
-                  </a>
+                    <div id="verify_now">
+                      <a id="verify_now_button"
+                        class="next action-primary"
+                        data-track-category="verification"
+                        data-track-event="edx.bi.user.verification.deferred"
+                        data-track-type="click"
+                        href="{{ lms_url }}/verify_student/verify-now/{{ course_key }}/">
+                        {% trans "Verify Now" %}
+                      </a>
+                    </div>
+                    <a id="verify_later_button"
+                      class="verify-later"
+                      data-track-category="verification"
+                      data-track-event="edx.bi.user.verification.immediate"
+                      data-track-type="click"
+                      href="{{ lms_url }}/dashboard">
+                      {% trans "Take me to dashboard" %}
+                    </a>
                   </div>
                 {% endif %}
             </div>
