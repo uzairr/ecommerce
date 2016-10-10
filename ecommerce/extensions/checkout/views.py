@@ -139,9 +139,14 @@ class ReceiptResponseView(TemplateView):
         order_number = self.request.GET.get('order_number')
         try:
             order = Order.objects.get(number=order_number, user=self.request.user)
-        except Order.DoesNotExist as ex:
-            # TODO: handle this better
-            raise ex
+        except Order.DoesNotExist:
+            context.update({
+                'is_payment_complete': False,
+                'page_title': _('Order not found'),
+                'error_text': _('Order {order_number} not found.').format(order_number=order_number),
+                'for_help_text': ''
+            })
+            return self.render_to_response(context)
 
         seat = order.lines.first().product
         provider_data = None
@@ -187,6 +192,7 @@ class ReceiptResponseView(TemplateView):
             'receipt': receipt,
             'verified': seat.attr.certificate_type == 'verified',
         })
+
         return self.render_to_response(context)
 
     def post(self, request, *args, **kwargs):  # pylint: disable=unused-argument

@@ -16,25 +16,24 @@
 
 {% block content %}
 <div class="receipt">
-    <div id="error-container" class="hidden">
-            <div class="error-message container">
-                <h3 class="title">
-                    <span class="sr">{% blocktrans %} {{ error_summary }} {% endblocktrans %}</span>
-                    {{ error_summary }}
-                </h3>
-                {% if error_text %}
-                <div class="copy">
-                    <p>{% blocktrans %} {{ error_text }} {% endblocktrans %}</p>
-                    <br/>
-                </div>
-                {% endif %}
-                <div class="msg">
-                    <p>{% autoescape off %}{% blocktrans %} {{ for_help_text }}
-                    {% endblocktrans %}{% endautoescape %}</p>
-                </div>
-            </div>
+  {% if error_text %}
+    <div id="error-container">
+        <div class="error-message container">
+          <h3 class="title">
+              <span class="sr">{% blocktrans %} {{ error_summary }} {% endblocktrans %}</span>
+              {{ error_summary }}
+          </h3>
+          <div class="copy">
+              <p>{% blocktrans %} {{ error_text }} {% endblocktrans %}</p>
+              <br/>
+          </div>
+          <div class="msg">
+              <p>{% autoescape off %}{% blocktrans %} {{ for_help_text }}
+              {% endblocktrans %}{% endautoescape %}</p>
+          </div>
+        </div>
     </div>
-
+  {% else %}
     <div class="container content-container">
         <div id="receipt-container"
           class="pay-and-verify hidden"
@@ -219,5 +218,6 @@
 
         </div>
     </div>
+  {% endif %}
 </div>
 {% endblock content %}
