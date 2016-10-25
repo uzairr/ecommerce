@@ -213,10 +213,10 @@ class VoucherAddMessagesView(VoucherAddView):
                     self.request,
                     _("Coupon code '{code}' has already been redeemed.").format(code=code)
                 )
-            else:
-                messages.error(
-                    self.request,
-                    _("Coupon code '{code}' is invalid.").format(code=code)
-                )
+            # else:
+            #     messages.error(
+            #         self.request,
+            #         _("Coupon code '{code}' is invalid.").format(code=code)
+            #     )
 
         return redirect_to_referrer(self.request, 'basket:summary')
