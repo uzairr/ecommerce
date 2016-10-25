@@ -1,0 +1,20 @@
+{% extends 'edx/base.html' %}
+{% load i18n %}
+{% load staticfiles %}
+
+{% block title %}
+    {% trans "Checkout Error" %}
+{% endblock title %}
+
+{% block navbar %}
+    {% include 'edx/partials/_student_navbar.html' %}
+{% endblock navbar %}
+
+{% block content %}
+    <div class="container content-wrapper receipt-cancel-error">
+        <h1>{% trans "Checkout Error" %}</h1>
+        <p>{% blocktrans %} An error has occurred and checkout can not continue. <b>You have not been charged.</b>
+        {% endblocktrans %}</p>
+
+    </div>
+{% endblock content %}

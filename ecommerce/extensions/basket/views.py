@@ -4,6 +4,8 @@ import logging
 
 import waffle
 from django.http import HttpResponseBadRequest, HttpResponseRedirect
+from django.core.urlresolvers import reverse
+from django.shortcuts import render
 from django.utils.translation import ugettext_lazy as _
 from opaque_keys.edx.keys import CourseKey
 from oscar.apps.basket.views import *  # pylint: disable=wildcard-import, unused-wildcard-import
@@ -16,7 +18,7 @@ from ecommerce.core.exceptions import SiteConfigurationError
 from ecommerce.core.url_utils import get_lms_url
 from ecommerce.courses.utils import get_certificate_type_display_value, get_course_info_from_catalog, mode_for_seat
 from ecommerce.extensions.analytics.utils import prepare_analytics_data
-from ecommerce.extensions.basket.utils import prepare_basket, get_basket_switch_data
+from ecommerce.extensions.basket.utils import prepare_basket, get_basket_switch_data, check_sdn
 from ecommerce.extensions.offer.utils import format_benefit_value
 from ecommerce.extensions.partner.shortcuts import get_partner_for_site
 from ecommerce.extensions.payment.constants import CLIENT_SIDE_CHECKOUT_FLAG_NAME
@@ -84,6 +86,13 @@ class BasketSummaryView(BasketView):
     """
     Display basket contents and checkout/payment options.
     """
+    def dispatch(self, request, *args, **kwargs):
+        if self.request.site.siteconfiguration.enable_sdn_check:
+            if not check_sdn(self.request):
+                logger.info('Failed SDN check -- not allowing checkout')
+                return render(request, 'basket/error.html')
+            else:
+                return super(BasketSummaryView, self).dispatch(request, *args, **kwargs)
 
     def _determine_seat_type(self, product):
         """

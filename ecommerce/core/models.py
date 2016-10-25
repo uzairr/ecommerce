@@ -121,6 +121,30 @@ class SiteConfiguration(models.Model):
         blank=True,
         default=False
     )
+    enable_sdn_check = models.BooleanField(
+        verbose_name=_('Enable SDN check'),
+        help_text=_('Enable SDN check at basket checkout.'),
+        blank=True,
+        default=False
+    )
+    sdn_api_url = models.CharField(
+        verbose_name=_('US Treasury SDN API URL'),
+        help_text=_('US Treasury SDN API URL.'),
+        max_length=255,
+        blank=True
+    )
+    sdn_api_key = models.CharField(
+        verbose_name=_('US Treasury SDN API key'),
+        help_text=_('US Treasury SDN API key.'),
+        max_length=255,
+        blank=True
+    )
+    sdn_api_list = models.CharField(
+        verbose_name=_('SDN lists'),
+        help_text=_('A comma seperated list of Treasury OFAC lists to check against.'),
+        max_length=255,
+        blank=True
+    )
 
     class Meta(object):
         unique_together = ('site', 'partner')
