@@ -34,6 +34,4 @@ class CoreExtrasTests(TestCase):
                           "{% load core_extras %}" "{% captureas %}42{%endcaptureas%}")
 
         self.assertTextCaptured('42')
-
-    def test_captureas_unicode(self):
-        self.assertTextCaptured(u'★❤')
+        self.assertTextCaptured('★❤')

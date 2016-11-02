@@ -37,8 +37,8 @@ class BasketTests(TestCase):
         expected = OrderNumberGenerator().order_number(basket)
         self.assertEqual(basket.order_number, expected)
 
-    def test_unicode(self):
-        """ Verify the __unicode__ method returns the correct value. """
+    def test_str(self):
+        """ Verify the __str__ method returns the correct value. """
         basket = factories.create_basket()
         expected = u"{id} - {status} basket (owner: {owner}, lines: {num_lines})".format(
             id=basket.id,
@@ -47,7 +47,7 @@ class BasketTests(TestCase):
             num_lines=basket.num_lines
         )
 
-        self.assertEqual(unicode(basket), expected)
+        self.assertEqual(str(basket), expected)
 
     def test_get_basket_without_existing_baskets(self):
         """ If the user has no existing baskets, the method should return a new one. """

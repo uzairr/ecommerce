@@ -20,11 +20,11 @@ StockRecord = get_model('partner', 'StockRecord')
 
 @ddt.ddt
 class CourseTests(CourseCatalogTestMixin, TestCase):
-    def test_unicode(self):
-        """Verify the __unicode__ method returns the Course ID."""
+    def test_str(self):
+        """Verify the __str__ method returns the Course ID."""
         course_id = u'edx/Demo_Course/DemoX'
         course = Course.objects.create(id=course_id)
-        self.assertEqual(unicode(course), course_id)
+        self.assertEqual(str(course), course_id)
 
     def test_seat_products(self):
         """

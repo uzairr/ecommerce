@@ -152,7 +152,7 @@ def get_theme_base_dirs():
 
     if not isinstance(theme_dirs, list):
         raise ImproperlyConfigured("COMPREHENSIVE_THEME_DIRS must be a list.")
-    if not all([isinstance(theme_dir, basestring) for theme_dir in theme_dirs]):
+    if not all([isinstance(theme_dir, str) for theme_dir in theme_dirs]):
         raise ImproperlyConfigured("COMPREHENSIVE_THEME_DIRS must contain only strings.")
     if not all([theme_dir.startswith("/") for theme_dir in theme_dirs]):
         raise ImproperlyConfigured("COMPREHENSIVE_THEME_DIRS must contain only absolute paths to themes dirs.")

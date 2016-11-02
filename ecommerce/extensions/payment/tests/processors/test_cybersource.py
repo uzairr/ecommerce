@@ -61,7 +61,7 @@ class CybersourceTests(CybersourceMixin, PaymentProcessorTestCaseMixin, TestCase
             'locale': settings.LANGUAGE_CODE,
             'transaction_type': 'sale',
             'reference_number': self.basket.order_number,
-            'amount': unicode(self.basket.total_incl_tax),
+            'amount': str(self.basket.total_incl_tax),
             'currency': self.basket.currency,
             'consumer_id': self.basket.owner.username,
             'override_custom_receipt_page': get_receipt_page_url(

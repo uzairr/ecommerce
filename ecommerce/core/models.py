@@ -1,6 +1,6 @@
 import datetime
 import logging
-from urlparse import urljoin
+from urllib.parse import urljoin
 
 from analytics import Client as SegmentClient
 from django.conf import settings

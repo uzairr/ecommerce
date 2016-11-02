@@ -39,7 +39,7 @@ class UpdateSeatExpireDateTests(CourseCatalogTestMixin, TestCase):
             'pagination': {},
             'results': [
                 {
-                    'enrollment_end': unicode(self.expire_date),
+                    'enrollment_end': str(self.expire_date),
                     'course_id': self.course.id
                 },
             ],

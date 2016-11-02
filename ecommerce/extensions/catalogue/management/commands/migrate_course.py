@@ -185,7 +185,7 @@ class Command(BaseCommand):
             return
 
         for course_id in course_ids:
-            course_id = unicode(course_id)
+            course_id = str(course_id)
             try:
                 with transaction.atomic():
                     migrated_course = MigratedCourse(course_id, site_domain)

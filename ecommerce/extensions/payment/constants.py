@@ -19,7 +19,7 @@ CARD_TYPES = {
     },
 }
 
-CARD_TYPE_CHOICES = ((key, value['display_name']) for key, value in CARD_TYPES.iteritems())
+CARD_TYPE_CHOICES = ((key, value['display_name']) for key, value in CARD_TYPES.items())
 CYBERSOURCE_CARD_TYPE_MAP = {
-    value['cybersource_code']: key for key, value in CARD_TYPES.iteritems() if 'cybersource_code' in value
+    value['cybersource_code']: key for key, value in CARD_TYPES.items() if 'cybersource_code' in value
 }

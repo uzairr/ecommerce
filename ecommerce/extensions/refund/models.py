@@ -53,7 +53,7 @@ class StatusMixin(object):
         self.save()
 
     def __str__(self):
-        return unicode(self.id)
+        return str(self.id)
 
 
 class Refund(StatusMixin, TimeStampedModel):

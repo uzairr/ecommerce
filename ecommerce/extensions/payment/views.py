@@ -1,5 +1,5 @@
 """ Views for interacting with the payment processor. """
-from cStringIO import StringIO
+import io
 import logging
 import os
 
@@ -283,9 +283,9 @@ class PaypalProfileAdminView(View):
     def get(self, request, *_args, **_kwargs):
 
         # Capture all output and logging
-        out = StringIO()
-        err = StringIO()
-        log = StringIO()
+        out = io.StringIO()
+        err = io.StringIO()
+        log = io.StringIO()
 
         log_handler = logging.StreamHandler(log)
         formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")

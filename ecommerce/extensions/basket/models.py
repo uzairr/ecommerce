@@ -9,7 +9,7 @@ Selector = get_class('partner.strategy', 'Selector')
 
 class Basket(AbstractBasket):
     site = models.ForeignKey(
-        'sites.Site', verbose_name=_("Site"), null=True, blank=True, default=None, on_delete=models.SET_NULL
+        'sites.Site', verbose_name=_('Site'), null=True, blank=True, default=None, on_delete=models.SET_NULL
     )
 
     @property
@@ -50,8 +50,8 @@ class Basket(AbstractBasket):
         for v in self.vouchers.all():
             self.vouchers.remove(v)
 
-    def __unicode__(self):
-        return _(u"{id} - {status} basket (owner: {owner}, lines: {num_lines})").format(
+    def __str__(self):
+        return _('{id} - {status} basket (owner: {owner}, lines: {num_lines})').format(
             id=self.id,
             status=self.status,
             owner=self.owner,
@@ -62,7 +62,7 @@ class BasketAttributeType(models.Model):
     """
     Used to keep attribute types for BasketAttribute
     """
-    name = models.CharField(_("Name"), max_length=128, unique=True)
+    name = models.CharField(_('Name'), max_length=128, unique=True)
 
     def __unicode__(self):
         return self.name
@@ -75,7 +75,7 @@ class BasketAttribute(models.Model):
     but could be extended
     """
     basket = models.ForeignKey('basket.Basket', verbose_name=_("Basket"))
-    attribute_type = models.ForeignKey('basket.BasketAttributeType', verbose_name=_("Attribute Type"))
+    attribute_type = models.ForeignKey('basket.BasketAttributeType', verbose_name=_('Attribute Type'))
     value_text = models.TextField(_("Text Attribute"))
 
     class Meta(object):

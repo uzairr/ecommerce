@@ -289,7 +289,7 @@ class Cybersource(BasePaymentProcessor):
 
             purchase_totals = client.factory.create('ns0:PurchaseTotals')
             purchase_totals.currency = currency
-            purchase_totals.grandTotalAmount = unicode(amount)
+            purchase_totals.grandTotalAmount = str(amount)
 
             response = client.service.runTransaction(merchantID=self.merchant_id, merchantReferenceCode=order.number,
                                                      orderRequestToken=order_request_token,

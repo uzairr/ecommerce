@@ -106,7 +106,7 @@ class CybersourceMixin(object):
         """ Generates a dict containing the API reply fields expected to be received from CyberSource. """
 
         req_reference_number = kwargs.get('req_reference_number', basket.order_number)
-        total = unicode(basket.total_incl_tax)
+        total = str(basket.total_incl_tax)
         auth_amount = auth_amount or total
         notification = {
             u'decision': decision,
@@ -154,14 +154,14 @@ class CybersourceMixin(object):
             def runTransaction(self, **kwargs):  # pylint: disable=unused-argument
                 cc_reply_items = {
                     'reasonCode': 100,
-                    'amount': unicode(amount),
+                    'amount': str(amount),
                     'requestDateTime': '2015-01-01T:00:00:00Z',
                     'reconciliationID': 'efg456'
                 }
                 items = {
                     'requestID': transaction_id,
                     'decision': decision,
-                    'merchantReferenceCode': unicode(basket_id),
+                    'merchantReferenceCode': str(basket_id),
                     'reasonCode': 100,
                     'requestToken': 'abc123',
                     'purchaseTotals': Factory.object('PurchaseTotals', {'currency': currency}),
@@ -225,7 +225,7 @@ class PaypalMixin(object):
 
     def mock_payment_creation_response(self, basket, state=PAYMENT_CREATION_STATE, approval_url=APPROVAL_URL,
                                        find=False):
-        total = unicode(basket.total_incl_tax)
+        total = str(basket.total_incl_tax)
         payment_creation_response = {
             u'create_time': u'2015-05-04T18:18:27Z',
             u'id': self.PAYMENT_ID,
@@ -262,7 +262,7 @@ class PaypalMixin(object):
                         {
                             u'quantity': line.quantity,
                             u'name': line.product.title,
-                            u'price': unicode(line.line_price_incl_tax_incl_discounts / line.quantity),
+                            u'price': str(line.line_price_incl_tax_incl_discounts / line.quantity),
                             u'currency': line.stockrecord.price_currency,
                         }
                         for line in basket.all_lines()
@@ -295,7 +295,7 @@ class PaypalMixin(object):
     def mock_payment_execution_response(self, basket, state=PAYMENT_EXECUTION_STATE, payer_info=None):
         if payer_info is None:
             payer_info = self.PAYER_INFO
-        total = unicode(basket.total_incl_tax)
+        total = str(basket.total_incl_tax)
         payment_execution_response = {
             u'create_time': u'2015-05-04T15:55:27Z',
             u'id': self.PAYMENT_ID,
@@ -325,7 +325,7 @@ class PaypalMixin(object):
                         {
                             u'quantity': line.quantity,
                             u'name': line.product.title,
-                            u'price': unicode(line.line_price_incl_tax_incl_discounts / line.quantity),
+                            u'price': str(line.line_price_incl_tax_incl_discounts / line.quantity),
                             u'currency': line.stockrecord.price_currency,
                         }
                         for line in basket.all_lines()

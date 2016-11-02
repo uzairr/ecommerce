@@ -97,7 +97,7 @@ class CouponUtilsTests(CouponMixin, CourseCatalogTestMixin, TestCase):
         """Verify the method generates a SKU for a coupon."""
         coupon = self.create_coupon(partner=self.partner, catalog=self.catalog)
         _hash = ' '.join((
-            unicode(coupon.id),
+            str(coupon.id),
             str(self.partner.id)
         ))
         digest = md5(_hash.lower()).hexdigest()[-7:]
