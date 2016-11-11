@@ -46,5 +46,21 @@ class PaypalProcessorConfiguration(SingletonModel):
         verbose_name = "Paypal Processor Configuration"
 
 
+class SDNCheckFailures(models.Model):
+    """ Records of SDN check failures. """
+    MATCHED, CONN_ERR = ('Matched', 'Connection Error')
+    FAILURE_CHOICES = (
+        (MATCHED, _('SDN check match')),
+        (CONN_ERR, _('Could not connect to SDN API'))
+    )
+    full_name = models.CharField(max_length=255)
+    sdn_check_response = JSONField()
+    failure_type = models.CharField(max_length=255, default=MATCHED, choices=FAILURE_CHOICES)
+    basket = models.ForeignKey('basket.Basket')
+    created = models.DateTimeField(auto_now_add=True)
+
+    class Meta(object):
+        verbose_name = "SDN Check Failure"
+
 # noinspection PyUnresolvedReferences
 from oscar.apps.payment.models import *  # noqa pylint: disable=ungrouped-imports, wildcard-import,unused-wildcard-import,wrong-import-position,wrong-import-order

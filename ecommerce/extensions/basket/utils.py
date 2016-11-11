@@ -9,6 +9,7 @@ from oscar.core.loading import get_class, get_model
 import pytz
 
 from ecommerce.core.constants import ENROLLMENT_CODE_PRODUCT_CLASS_NAME, SEAT_PRODUCT_CLASS_NAME
+from ecommerce.extensions.payment.models import SDNCheckFailures
 from ecommerce.referrals.models import Referral
 
 Applicator = get_class('offer.utils', 'Applicator')
@@ -20,31 +21,45 @@ logger = logging.getLogger(__name__)
 
 def check_sdn(request):
     """
-    Call to check if basket owner is on the US Treasuery Department
-    OFAC list
+    Call to check if basket owner is on the US Treasuery Department OFAC list.
+    The SDN check URL is specific for https://api.trade.gov SDN endpoint.
+
+    SDN check matches and failures to connect are logged in SDNCheckFailures model.
 
     Arguments:
         request (Request): The request object made to the view.
     Returns:
         result (Bool): Whether or not there is a match.
     """
-    site = request.site
-    site_config = site.siteconfiguration
+    site_config = request.site.siteconfiguration
     full_name = request.user.full_name
-    sdn_query_url = site_config.sdn_api_url + \
-        '/?sources={sdn_list}&api_key={sdn_key}&type=individual&q={full_name}'.\
-        format(sdn_list=site_config.sdn_api_list, sdn_key=site_config.sdn_api_key, full_name=full_name)
+    basket = Basket.get_basket(request.user, request.site)
+
+    sdn_query_url = '{sdn_api}/?sources={sdn_list}&api_key={sdn_key}&type=individual&q={full_name}'.format(
+        sdn_api=site_config.sdn_api_url,
+        sdn_list=site_config.sdn_api_list,
+        sdn_key=site_config.sdn_api_key,
+        full_name=full_name
+    )
     response = requests.get(sdn_query_url)
 
     if response.status_code != 200:
+        SDNCheckFailures.objects.create(
+            full_name=full_name,
+            failure_type=SDNCheckFailures.CONN_ERR,
+            basket=basket
+        )
         logger.info('Unable to connect to US Treasury SDN API')
         return True
-
-    if response.json()['total'] == 0:
+    if json.loads(response.content)['total'] == 0:
         return True
     else:
-        basket = Basket.get_basket(request.user, request.site)
-        logger.info('SDN check failed for user %s on basket id %d', full_name, basket.id)
+        SDNCheckFailures.objects.create(
+            full_name=full_name,
+            sdn_check_response=response.content,
+            basket=basket
+        )
+        logger.info('SDN check failed for user [%s] on basket id [%d]', full_name, basket.id)
         return False
 
 

@@ -7,7 +7,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0020_siteconfiguration_enable_otto_receipt_page'),
+        ('core', '0022_auto_20161108_2101'),
     ]
 
     operations = [
